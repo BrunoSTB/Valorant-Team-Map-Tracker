@@ -44,3 +44,6 @@ Thumbs.db
 
 # Agents
 .claude
+
+# Firebase secrets
+src/environments/environment.ts

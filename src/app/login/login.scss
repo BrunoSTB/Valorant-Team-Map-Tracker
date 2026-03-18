@@ -1,0 +1,62 @@
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #0f1923;
+}
+
+.login-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 2.5rem 3rem;
+  background: #1a2535;
+  border: 1px solid #2a3a4d;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.login-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #ece8e1;
+
+  .accent { color: #ff4655; }
+}
+
+.login-sub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  color: #8b9aa8;
+}
+
+.google-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1.5rem;
+  background: #ece8e1;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: 0.5rem;
+
+  &:hover { background: #fff; }
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}

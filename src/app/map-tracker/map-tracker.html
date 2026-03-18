@@ -1,19 +1,22 @@
 <div class="tracker">
   <header class="header">
     <div class="header-title"><span class="accent">VALORANT</span> MAP TRACKER</div>
-    <div class="overall-stats">
-      <div class="stat-pill wins">
-        <span class="stat-label">WINS</span>
-        <span class="stat-value">{{ totalWins() }}</span>
+    <div class="header-right">
+      <div class="overall-stats">
+        <div class="stat-pill wins">
+          <span class="stat-label">WINS</span>
+          <span class="stat-value">{{ totalWins() }}</span>
+        </div>
+        <div class="stat-pill losses">
+          <span class="stat-label">LOSSES</span>
+          <span class="stat-value">{{ totalLosses() }}</span>
+        </div>
+        <div class="stat-pill winrate">
+          <span class="stat-label">WIN RATE</span>
+          <span class="stat-value">{{ overallWinRate() }}%</span>
+        </div>
       </div>
-      <div class="stat-pill losses">
-        <span class="stat-label">LOSSES</span>
-        <span class="stat-value">{{ totalLosses() }}</span>
-      </div>
-      <div class="stat-pill winrate">
-        <span class="stat-label">WIN RATE</span>
-        <span class="stat-value">{{ overallWinRate() }}%</span>
-      </div>
+      <button class="signout-btn" (click)="auth.signOut()">SAIR</button>
     </div>
   </header>
 

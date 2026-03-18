@@ -27,9 +27,34 @@
   .accent { color: #ff4655; }
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .overall-stats {
   display: flex;
   gap: 0.6rem;
+}
+
+.signout-btn {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  padding: 0.35rem 0.75rem;
+  border-radius: 3px;
+  border: 1px solid #2a3a4d;
+  background: transparent;
+  color: #4a6080;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: #ff4655;
+    color: #ff4655;
+  }
 }
 
 .stat-pill {

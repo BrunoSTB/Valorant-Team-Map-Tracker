@@ -1,1 +1,9 @@
-<app-map-tracker />
+@if (!auth.authReady()) {
+  <div class="app-loading">
+    <span>CARREGANDO...</span>
+  </div>
+} @else if (auth.currentUser()) {
+  <app-map-tracker />
+} @else {
+  <app-login />
+}
