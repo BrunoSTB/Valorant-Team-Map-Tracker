@@ -1,8 +1,6 @@
 <div class="tracker">
   <header class="header">
-    <div class="header-title">
-      <span class="accent">VALORANT</span> MAP TRACKER
-    </div>
+    <div class="header-title"><span class="accent">VALORANT</span> MAP TRACKER</div>
     <div class="overall-stats">
       <div class="stat-pill wins">
         <span class="stat-label">WINS</span>
@@ -19,65 +17,127 @@
     </div>
   </header>
 
-  <div class="maps-grid">
-    @for (map of maps(); track map.name; let i = $index) {
-      <div class="map-card"
-           [class.winning]="map.wins > map.losses && (map.wins + map.losses) > 0"
-           [class.losing]="map.losses > map.wins && (map.wins + map.losses) > 0">
-        <div class="map-header">
-          <h2 class="map-name">{{ map.name }}</h2>
-          <div class="win-rate-badge"
-               [class.good]="winRate(map) >= 50"
-               [class.bad]="winRate(map) < 50 && (map.wins + map.losses) > 0">
-            @if (map.wins + map.losses > 0) {
-              {{ winRate(map) }}% WR
+  <section class="map-section">
+    <div class="section-header">MAPAS DO SPLIT ATUAL</div>
+    <div class="map-list">
+      @for (map of splitMaps(); track map.name) {
+        <div class="map-row"
+             [class.winning]="map.wins > map.losses && totalGamesFor(map) > 0"
+             [class.losing]="map.losses > map.wins && totalGamesFor(map) > 0"
+             [style.background-image]="'url(' + map.image + '.jpg)'">
+          <div class="map-identity">
+            <span class="map-name">{{ map.name | uppercase }}</span>
+          </div>
+
+          <div class="map-winrate">
+            @if (totalGamesFor(map) > 0) {
+              <span class="wr-value" [class.good]="winRate(map) >= 50" [class.bad]="winRate(map) < 50">
+                {{ winRate(map) }}%
+              </span>
+              <span class="wr-games">{{ totalGamesFor(map) }} jogos</span>
             } @else {
-              NO DATA
+              <span class="wr-value neutral">—</span>
+              <span class="wr-games">0 jogos</span>
             }
           </div>
-        </div>
 
-        <div class="counters">
-          <div class="counter win-counter">
-            <button class="counter-btn minus" (click)="removeWin(i)" [disabled]="map.wins === 0">−</button>
-            <div class="counter-display">
-              <span class="counter-value win-val">{{ map.wins }}</span>
-              <span class="counter-label">WINS</span>
+          <div class="map-counters">
+            <div class="counter-group">
+              <span class="counter-label">WIN</span>
+              <div class="counter-controls">
+                <button class="ctrl-btn minus" (click)="removeWin(map.name)" [disabled]="map.wins === 0">−</button>
+                <span class="ctrl-value win-val">{{ map.wins }}</span>
+                <button class="ctrl-btn plus win-plus" (click)="addWin(map.name)">+</button>
+              </div>
             </div>
-            <button class="counter-btn plus win-plus" (click)="addWin(i)">+</button>
+            <div class="counter-group">
+              <span class="counter-label loss-lbl">LOSS</span>
+              <div class="counter-controls">
+                <button class="ctrl-btn minus" (click)="removeLoss(map.name)" [disabled]="map.losses === 0">−</button>
+                <span class="ctrl-value loss-val">{{ map.losses }}</span>
+                <button class="ctrl-btn plus loss-plus" (click)="addLoss(map.name)">+</button>
+              </div>
+            </div>
           </div>
 
-          <div class="vs-divider">VS</div>
-
-          <div class="counter loss-counter">
-            <button class="counter-btn minus" (click)="removeLoss(i)" [disabled]="map.losses === 0">−</button>
-            <div class="counter-display">
-              <span class="counter-value loss-val">{{ map.losses }}</span>
-              <span class="counter-label">LOSSES</span>
-            </div>
-            <button class="counter-btn plus loss-plus" (click)="addLoss(i)">+</button>
-          </div>
+          <button class="notes-btn" (click)="openNotes(globalIndex(map))" [class.has-notes]="map.notes">
+            NOTAS
+          </button>
         </div>
+      }
+    </div>
+  </section>
 
-        @if (map.wins + map.losses > 0) {
-          <div class="progress-bar">
-            <div class="progress-win" [style.width.%]="winRate(map)"></div>
+  <section class="map-section outros-section">
+    <button class="section-toggle" (click)="showOthers.set(!showOthers())">
+      {{ showOthers() ? '▲' : '▼' }} OUTROS MAPAS (FORA DO SPLIT)
+    </button>
+    @if (showOthers()) {
+      <div class="map-list">
+        @for (map of otherMaps(); track map.name) {
+          <div class="map-row"
+               [class.winning]="map.wins > map.losses && totalGamesFor(map) > 0"
+               [class.losing]="map.losses > map.wins && totalGamesFor(map) > 0"
+               [style.background-image]="'url(' + map.image + '.jpg)'">
+            <div class="map-identity">
+              <span class="map-name">{{ map.name | uppercase }}</span>
+            </div>
+
+            <div class="map-winrate">
+              @if (totalGamesFor(map) > 0) {
+                <span class="wr-value" [class.good]="winRate(map) >= 50" [class.bad]="winRate(map) < 50">
+                  {{ winRate(map) }}%
+                </span>
+                <span class="wr-games">{{ totalGamesFor(map) }} jogos</span>
+              } @else {
+                <span class="wr-value neutral">—</span>
+                <span class="wr-games">0 jogos</span>
+              }
+            </div>
+
+            <div class="map-counters">
+              <div class="counter-group">
+                <span class="counter-label">WIN</span>
+                <div class="counter-controls">
+                  <button class="ctrl-btn minus" (click)="removeWin(map.name)" [disabled]="map.wins === 0">−</button>
+                  <span class="ctrl-value win-val">{{ map.wins }}</span>
+                  <button class="ctrl-btn plus win-plus" (click)="addWin(map.name)">+</button>
+                </div>
+              </div>
+              <div class="counter-group">
+                <span class="counter-label loss-lbl">SPLIT ATUAL<br>LOSS</span>
+                <div class="counter-controls">
+                  <button class="ctrl-btn minus" (click)="removeLoss(map.name)" [disabled]="map.losses === 0">−</button>
+                  <span class="ctrl-value loss-val">{{ map.losses }}</span>
+                  <button class="ctrl-btn plus loss-plus" (click)="addLoss(map.name)">+</button>
+                </div>
+              </div>
+            </div>
+
+            <button class="notes-btn" (click)="openNotes(globalIndex(map))" [class.has-notes]="map.notes">
+              NOTAS
+            </button>
           </div>
         }
-
-        <div class="notes-section">
-          <label class="notes-label">NOTES</label>
-          <textarea
-            class="notes-input"
-            [value]="map.notes"
-            (input)="updateNotes(i, $any($event.target).value)"
-            placeholder="Add strategy notes, agent compositions, tips..."
-            rows="3"
-          ></textarea>
-        </div>
-
-        <button class="reset-btn" (click)="resetMap(i)">RESET</button>
       </div>
     }
-  </div>
+  </section>
 </div>
+
+@if (notesOpenIndex() !== null) {
+  <div class="modal-overlay" (click)="closeNotes()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <span class="modal-title">NOTAS — {{ maps()[notesOpenIndex()!].name | uppercase }}</span>
+        <button class="modal-close" (click)="closeNotes()">✕</button>
+      </div>
+      <textarea
+        class="modal-textarea"
+        [value]="maps()[notesOpenIndex()!].notes"
+        (input)="updateNotes(maps()[notesOpenIndex()!].name, $any($event.target).value)"
+        placeholder="Estratégias, composições de agentes, dicas..."
+        rows="8"
+      ></textarea>
+    </div>
+  </div>
+}

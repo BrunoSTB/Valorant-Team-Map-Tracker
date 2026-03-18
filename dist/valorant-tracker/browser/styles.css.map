@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/styles.scss"],
-  "sourcesContent": ["@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap');\n\n* {\n  box-sizing: border-box;\n  margin: 0;\n  padding: 0;\n}\n\nbody {\n  font-family: 'Roboto', sans-serif;\n  background-color: #0f1923;\n  color: #e0e0e0;\n  min-height: 100vh;\n}\n"],
-  "mappings": ";;;AAEA;AACE,cAAA;AACA,UAAA;AACA,WAAA;;AAGF;AACE,eAAA,QAAA,EAAA;AACA,oBAAA;AACA,SAAA;AACA,cAAA;;",
-  "names": []
-}
