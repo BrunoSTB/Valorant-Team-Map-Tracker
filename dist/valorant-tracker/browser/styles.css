@@ -1,0 +1,17 @@
+@import "https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap";
+
+/* src/styles.scss */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: "Roboto", sans-serif;
+  background-color: #0f1923;
+  color: #e0e0e0;
+  min-height: 100vh;
+}
+
+/* angular:styles/global:styles */
+/*# sourceMappingURL=styles.css.map */
