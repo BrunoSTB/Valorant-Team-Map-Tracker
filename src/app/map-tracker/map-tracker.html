@@ -1,0 +1,83 @@
+<div class="tracker">
+  <header class="header">
+    <div class="header-title">
+      <span class="accent">VALORANT</span> MAP TRACKER
+    </div>
+    <div class="overall-stats">
+      <div class="stat-pill wins">
+        <span class="stat-label">WINS</span>
+        <span class="stat-value">{{ totalWins() }}</span>
+      </div>
+      <div class="stat-pill losses">
+        <span class="stat-label">LOSSES</span>
+        <span class="stat-value">{{ totalLosses() }}</span>
+      </div>
+      <div class="stat-pill winrate">
+        <span class="stat-label">WIN RATE</span>
+        <span class="stat-value">{{ overallWinRate() }}%</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="maps-grid">
+    @for (map of maps(); track map.name; let i = $index) {
+      <div class="map-card"
+           [class.winning]="map.wins > map.losses && (map.wins + map.losses) > 0"
+           [class.losing]="map.losses > map.wins && (map.wins + map.losses) > 0">
+        <div class="map-header">
+          <h2 class="map-name">{{ map.name }}</h2>
+          <div class="win-rate-badge"
+               [class.good]="winRate(map) >= 50"
+               [class.bad]="winRate(map) < 50 && (map.wins + map.losses) > 0">
+            @if (map.wins + map.losses > 0) {
+              {{ winRate(map) }}% WR
+            } @else {
+              NO DATA
+            }
+          </div>
+        </div>
+
+        <div class="counters">
+          <div class="counter win-counter">
+            <button class="counter-btn minus" (click)="removeWin(i)" [disabled]="map.wins === 0">−</button>
+            <div class="counter-display">
+              <span class="counter-value win-val">{{ map.wins }}</span>
+              <span class="counter-label">WINS</span>
+            </div>
+            <button class="counter-btn plus win-plus" (click)="addWin(i)">+</button>
+          </div>
+
+          <div class="vs-divider">VS</div>
+
+          <div class="counter loss-counter">
+            <button class="counter-btn minus" (click)="removeLoss(i)" [disabled]="map.losses === 0">−</button>
+            <div class="counter-display">
+              <span class="counter-value loss-val">{{ map.losses }}</span>
+              <span class="counter-label">LOSSES</span>
+            </div>
+            <button class="counter-btn plus loss-plus" (click)="addLoss(i)">+</button>
+          </div>
+        </div>
+
+        @if (map.wins + map.losses > 0) {
+          <div class="progress-bar">
+            <div class="progress-win" [style.width.%]="winRate(map)"></div>
+          </div>
+        }
+
+        <div class="notes-section">
+          <label class="notes-label">NOTES</label>
+          <textarea
+            class="notes-input"
+            [value]="map.notes"
+            (input)="updateNotes(i, $any($event.target).value)"
+            placeholder="Add strategy notes, agent compositions, tips..."
+            rows="3"
+          ></textarea>
+        </div>
+
+        <button class="reset-btn" (click)="resetMap(i)">RESET</button>
+      </div>
+    }
+  </div>
+</div>
