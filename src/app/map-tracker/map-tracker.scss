@@ -250,16 +250,17 @@
   letter-spacing: 0.1em;
   padding: 0.3rem 0.65rem;
   border-radius: 3px;
-  border: 1px solid #2a3a4d;
+  border: 1px solid #ece8e1;
   background: transparent;
-  color: #4a6080;
+  color: #ece8e1;
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
 
   &:hover {
-    border-color: #ece8e1;
-    color: #ece8e1;
+    border-color: #2a3a4d;
+    color: #2a3a4d;
+    background: #ece8e1;
   }
 
   &.has-notes {
