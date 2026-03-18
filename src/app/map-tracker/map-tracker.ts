@@ -6,17 +6,17 @@ import { MapStats } from '../map.model';
 const STORAGE_KEY = 'valorant-map-stats';
 
 const DEFAULT_MAPS: MapStats[] = [
-  { name: 'Abyss',    image: 'abyss',    inSplit: false,  wins: 0, losses: 0, notes: '' },
+  { name: 'Abyss',    image: 'abyss',    inSplit: false,  wins: 3, losses: 1, notes: '' },
   { name: 'Ascent',   image: 'ascent',   inSplit: false, wins: 0, losses: 0, notes: '' },
-  { name: 'Bind',     image: 'bind',     inSplit: true,  wins: 0, losses: 0, notes: '' },
-  { name: 'Breeze',   image: 'breeze',   inSplit: true,  wins: 0, losses: 0, notes: '' },
-  { name: 'Corrode',  image: 'corrode',  inSplit: false,  wins: 0, losses: 0, notes: '' },
+  { name: 'Bind',     image: 'bind',     inSplit: true,  wins: 0, losses: 3, notes: '' },
+  { name: 'Breeze',   image: 'breeze',   inSplit: true,  wins: 1, losses: 3, notes: '' },
+  { name: 'Corrode',  image: 'corrode',  inSplit: false,  wins: 3, losses: 2, notes: '' },
   { name: 'Fracture', image: 'fracture', inSplit: true, wins: 0, losses: 0, notes: '' },
-  { name: 'Haven',    image: 'haven',    inSplit: true,  wins: 0, losses: 0, notes: '' },
+  { name: 'Haven',    image: 'haven',    inSplit: true,  wins: 3, losses: 1, notes: '' },
   { name: 'Icebox',   image: 'icebox',   inSplit: false, wins: 0, losses: 0, notes: '' },
   { name: 'Lotus',    image: 'lotus',    inSplit: true, wins: 0, losses: 0, notes: '' },
-  { name: 'Pearl',    image: 'pearl',    inSplit: true,  wins: 0, losses: 0, notes: '' },
-  { name: 'Split',    image: 'split',    inSplit: true,  wins: 0, losses: 0, notes: '' },
+  { name: 'Pearl',    image: 'pearl',    inSplit: true,  wins: 1, losses: 3, notes: '' },
+  { name: 'Split',    image: 'split',    inSplit: true,  wins: 2, losses: 1, notes: '' },
   { name: 'Sunset',   image: 'sunset',   inSplit: false,  wins: 0, losses: 0, notes: '' },
 ];
 
