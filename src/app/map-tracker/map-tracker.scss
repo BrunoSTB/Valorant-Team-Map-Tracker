@@ -267,6 +267,12 @@
     border-color: rgba(255,200,50,.4);
     color: rgba(255,200,50,.8);
   }
+
+  &.has-notes:hover {
+    background: rgba(255,200,50,.8);
+    border-color: #2a3a4d;
+    color: #2a3a4d;
+  }
 }
 
 // ── Outros toggle ────────────────────────────────────────────────────────────
@@ -345,6 +351,44 @@
   transition: color 0.15s;
 
   &:hover { color: #ff4655; }
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.modal-cancel {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.4rem 1rem;
+  border-radius: 3px;
+  border: 1px solid #2a3a4d;
+  background: transparent;
+  color: #8b9aa8;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover { border-color: #4a6080; color: #ece8e1; }
+}
+
+.modal-save {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.4rem 1.25rem;
+  border-radius: 3px;
+  border: 1px solid #3abf71;
+  background: rgba(58, 191, 113, 0.15);
+  color: #3abf71;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover { background: rgba(58, 191, 113, 0.3); }
 }
 
 .modal-textarea {

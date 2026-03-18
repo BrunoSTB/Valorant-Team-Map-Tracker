@@ -133,11 +133,15 @@
       </div>
       <textarea
         class="modal-textarea"
-        [value]="maps()[notesOpenIndex()!].notes"
-        (input)="updateNotes(maps()[notesOpenIndex()!].name, $any($event.target).value)"
+        [value]="pendingNotes()"
+        (input)="pendingNotes.set($any($event.target).value)"
         placeholder="Estratégias, composições de agentes, dicas..."
         rows="8"
       ></textarea>
+      <div class="modal-footer">
+        <button class="modal-cancel" (click)="closeNotes()">CANCELAR</button>
+        <button class="modal-save" (click)="saveNotes()">SALVAR</button>
+      </div>
     </div>
   </div>
 }

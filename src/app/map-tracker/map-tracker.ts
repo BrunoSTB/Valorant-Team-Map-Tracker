@@ -6,17 +6,18 @@ import { MapStats } from '../map.model';
 const STORAGE_KEY = 'valorant-map-stats';
 
 const DEFAULT_MAPS: MapStats[] = [
-  { name: 'Abyss',    image: 'abyss',    inSplit: true,  wins: 0, losses: 0, notes: '' },
+  { name: 'Abyss',    image: 'abyss',    inSplit: false,  wins: 0, losses: 0, notes: '' },
+  { name: 'Corrode',  image: 'corrode',  inSplit: false,  wins: 0, losses: 0, notes: '' },
   { name: 'Bind',     image: 'bind',     inSplit: true,  wins: 0, losses: 0, notes: '' },
   { name: 'Breeze',   image: 'breeze',   inSplit: true,  wins: 0, losses: 0, notes: '' },
   { name: 'Haven',    image: 'haven',    inSplit: true,  wins: 0, losses: 0, notes: '' },
   { name: 'Pearl',    image: 'pearl',    inSplit: true,  wins: 0, losses: 0, notes: '' },
   { name: 'Split',    image: 'split',    inSplit: true,  wins: 0, losses: 0, notes: '' },
-  { name: 'Sunset',   image: 'sunset',   inSplit: true,  wins: 0, losses: 0, notes: '' },
+  { name: 'Sunset',   image: 'sunset',   inSplit: false,  wins: 0, losses: 0, notes: '' },
   { name: 'Ascent',   image: 'ascent',   inSplit: false, wins: 0, losses: 0, notes: '' },
-  { name: 'Fracture', image: 'fracture', inSplit: false, wins: 0, losses: 0, notes: '' },
+  { name: 'Fracture', image: 'fracture', inSplit: true, wins: 0, losses: 0, notes: '' },
   { name: 'Icebox',   image: 'icebox',   inSplit: false, wins: 0, losses: 0, notes: '' },
-  { name: 'Lotus',    image: 'lotus',    inSplit: false, wins: 0, losses: 0, notes: '' },
+  { name: 'Lotus',    image: 'lotus',    inSplit: true, wins: 0, losses: 0, notes: '' },
 ];
 
 @Component({
@@ -29,6 +30,7 @@ export class MapTracker {
   maps = signal<MapStats[]>(this.loadMaps());
   showOthers = signal(false);
   notesOpenIndex = signal<number | null>(null);
+  pendingNotes = signal('');
 
   splitMaps = computed(() => this.maps().filter(m => m.inSplit));
   otherMaps = computed(() => this.maps().filter(m => !m.inSplit));
@@ -71,7 +73,15 @@ export class MapTracker {
   }
 
   openNotes(index: number): void {
+    this.pendingNotes.set(this.maps()[index].notes);
     this.notesOpenIndex.set(index);
+  }
+
+  saveNotes(): void {
+    const index = this.notesOpenIndex();
+    if (index === null) return;
+    this.updateNotes(this.maps()[index].name, this.pendingNotes());
+    this.notesOpenIndex.set(null);
   }
 
   closeNotes(): void {
