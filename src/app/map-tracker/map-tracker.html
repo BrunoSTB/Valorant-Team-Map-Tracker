@@ -131,20 +131,30 @@
   <div class="modal-overlay" (click)="closeNotes()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <span class="modal-title">NOTAS — {{ maps()[notesOpenIndex()!].name | uppercase }}</span>
+        <span class="modal-title">{{ maps()[notesOpenIndex()!].name | uppercase }}</span>
         <button class="modal-close" (click)="closeNotes()">✕</button>
       </div>
-      <textarea
-        class="modal-textarea"
-        [value]="pendingNotes()"
-        (input)="pendingNotes.set($any($event.target).value)"
-        placeholder="Estratégias, composições de agentes, dicas..."
-        rows="8"
-      ></textarea>
-      <div class="modal-footer">
-        <button class="modal-cancel" (click)="closeNotes()">CANCELAR</button>
-        <button class="modal-save" (click)="saveNotes()">SALVAR</button>
+      <div class="modal-tabs">
+        <button class="modal-tab" [class.active]="modalTab() === 'notes'" (click)="modalTab.set('notes')">NOTAS</button>
+        <button class="modal-tab" [class.active]="modalTab() === 'map'" (click)="modalTab.set('map')">MAPA</button>
       </div>
+      @if (modalTab() === 'notes') {
+        <textarea
+          class="modal-textarea"
+          [value]="pendingNotes()"
+          (input)="pendingNotes.set($any($event.target).value)"
+          placeholder="Estratégias, composições de agentes, dicas..."
+          rows="8"
+        ></textarea>
+        <div class="modal-footer">
+          <button class="modal-cancel" (click)="closeNotes()">CANCELAR</button>
+          <button class="modal-save" (click)="saveNotes()">SALVAR</button>
+        </div>
+      } @else {
+        <div class="modal-map">
+          <img [src]="maps()[notesOpenIndex()!].image + '_map.jpg'" [alt]="maps()[notesOpenIndex()!].name + ' map'" class="modal-map-img" />
+        </div>
+      }
     </div>
   </div>
 }

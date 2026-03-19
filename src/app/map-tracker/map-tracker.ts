@@ -40,6 +40,7 @@ export class MapTracker implements OnDestroy {
   showOthers = signal(false);
   notesOpenIndex = signal<number | null>(null);
   pendingNotes = signal('');
+  modalTab = signal<'notes' | 'map'>('notes');
 
   splitMaps = computed(() => this.maps().filter(m => m.inSplit));
   otherMaps = computed(() => this.maps().filter(m => !m.inSplit));
@@ -100,6 +101,7 @@ export class MapTracker implements OnDestroy {
   openNotes(index: number): void {
     this.pendingNotes.set(this.maps()[index].notes);
     this.notesOpenIndex.set(index);
+    this.modalTab.set('notes');
   }
 
   saveNotes(): void {
