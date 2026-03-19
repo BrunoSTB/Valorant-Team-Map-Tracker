@@ -7,7 +7,7 @@ import { AuthService } from '../auth.service';
 
 const LEGACY_STORAGE_KEY = 'valorant-map-stats';
 
-const ICON_SIZE = 48;
+const ICON_SIZE = 34;
 
 type CanvasItem =
   | { type: 'stroke'; points: Array<{ x: number; y: number }>; mode: 'pen' | 'eraser' }
