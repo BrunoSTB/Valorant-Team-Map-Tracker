@@ -209,7 +209,7 @@ export class MapTracker implements OnDestroy {
       ctx.lineWidth = 20;
     } else {
       ctx.globalCompositeOperation = 'source-over';
-      ctx.strokeStyle = '#111111';
+      ctx.strokeStyle = '#00F0A1';
       ctx.lineWidth = 3;
     }
     ctx.lineCap = 'round';
@@ -281,7 +281,7 @@ export class MapTracker implements OnDestroy {
           ctx.lineWidth = 20;
         } else {
           ctx.globalCompositeOperation = 'source-over';
-          ctx.strokeStyle = '#111111';
+          ctx.strokeStyle = '#00F0A1';
           ctx.lineWidth = 3;
         }
         ctx.lineCap = 'round';
