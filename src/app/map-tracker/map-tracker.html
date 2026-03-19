@@ -152,7 +152,26 @@
         </div>
       } @else {
         <div class="modal-map">
-          <img [src]="maps()[notesOpenIndex()!].image + '_map.jpg'" [alt]="maps()[notesOpenIndex()!].name + ' map'" class="modal-map-img" />
+          <div class="map-toolbar">
+            <button class="tool-btn" [class.pen-active]="activeTool() === 'pen'" (click)="setTool('pen')" title="Lápis">✏</button>
+            <button class="tool-btn" [class.active]="activeTool() === 'eraser'" (click)="setTool('eraser')" title="Borracha">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 20H7L3 16l13-13 7 7-3 4z"/><path d="M6.5 17.5l4-4"/>
+              </svg>
+            </button>
+            @if (activeTool() !== null) {
+              <button class="tool-btn" (click)="clearCanvas()" title="Limpar">✕</button>
+            }
+          </div>
+          <div class="map-drawing-area">
+            <img [src]="maps()[notesOpenIndex()!].image + '_map.jpg'" [alt]="maps()[notesOpenIndex()!].name + ' map'" class="modal-map-img" />
+            <canvas #mapCanvas class="map-canvas" [class.active]="activeTool() !== null" [class.eraser]="activeTool() === 'eraser'"
+              (mousedown)="onCanvasMouseDown($event)"
+              (mousemove)="onCanvasMouseMove($event)"
+              (mouseup)="onCanvasMouseUp()"
+              (mouseleave)="onCanvasMouseUp()">
+            </canvas>
+          </div>
         </div>
       }
     </div>
