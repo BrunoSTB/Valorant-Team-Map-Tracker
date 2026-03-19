@@ -343,8 +343,8 @@
   background: #1a2535;
   border: 1px solid #2a3a4d;
   border-radius: 6px;
-  width: 800px;
-  height: 560px;
+  width: min(calc(100vw - 2rem), 1100px);
+  height: calc(100vh - 4rem);
   max-width: calc(100vw - 2rem);
   max-height: calc(100vh - 4rem);
   padding: 1.25rem;
@@ -521,9 +521,25 @@
     cursor: crosshair;
   }
 
-  &.eraser {
-    cursor: cell;
-  }
+  &.eraser { cursor: cell; }
+  &.placing { cursor: crosshair; }
+}
+
+.char-select {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  border: 1px solid #2a3a4d;
+  background: #0f1923;
+  color: #8b9aa8;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+
+  &:focus { outline: none; border-color: #ff4655; color: #ece8e1; }
+  option { background: #0f1923; }
 }
 
 .modal-textarea {

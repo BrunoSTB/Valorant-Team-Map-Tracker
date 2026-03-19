@@ -7,6 +7,30 @@ import { AuthService } from '../auth.service';
 
 const LEGACY_STORAGE_KEY = 'valorant-map-stats';
 
+const ICON_SIZE = 48;
+
+type CanvasItem =
+  | { type: 'stroke'; points: Array<{ x: number; y: number }>; mode: 'pen' | 'eraser' }
+  | { type: 'character'; char: string; x: number; y: number };
+
+const CHARACTERS: { id: string; name: string }[] = [
+  { id: 'astra', name: 'Astra' }, { id: 'breach', name: 'Breach' },
+  { id: 'brimstone', name: 'Brimstone' }, { id: 'chamber', name: 'Chamber' },
+  { id: 'clove', name: 'Clove' }, { id: 'cypher', name: 'Cypher' },
+  { id: 'deadlock', name: 'Deadlock' }, { id: 'Fade', name: 'Fade' },
+  { id: 'gekko', name: 'Gekko' }, { id: 'harbor', name: 'Harbor' },
+  { id: 'iso', name: 'Iso' }, { id: 'jett', name: 'Jett' },
+  { id: 'kayo', name: 'Kayo' }, { id: 'killjoy', name: 'Killjoy' },
+  { id: 'Miks', name: 'Miks' }, { id: 'Neon', name: 'Neon' },
+  { id: 'omen', name: 'Omen' }, { id: 'phoenix', name: 'Phoenix' },
+  { id: 'raze', name: 'Raze' }, { id: 'reyna', name: 'Reyna' },
+  { id: 'sage', name: 'Sage' }, { id: 'skye', name: 'Skye' },
+  { id: 'sova', name: 'Sova' }, { id: 'tejo', name: 'Tejo' },
+  { id: 'veto', name: 'Veto' }, { id: 'viper', name: 'Viper' },
+  { id: 'vyse', name: 'Vyse' }, { id: 'waylay', name: 'Waylay' },
+  { id: 'yoru', name: 'Yoru' },
+].sort((a, b) => a.name.localeCompare(b.name));
+
 const DEFAULT_MAPS: MapStats[] = [
   { name: 'Abyss',    image: 'abyss',    inSplit: false, wins: 0, losses: 0, notes: '' },
   { name: 'Ascent',   image: 'ascent',   inSplit: false, wins: 0, losses: 0, notes: '' },
@@ -41,15 +65,18 @@ export class MapTracker implements OnDestroy {
   notesOpenIndex = signal<number | null>(null);
   pendingNotes = signal('');
   modalTab = signal<'notes' | 'map'>('notes');
-  activeTool = signal<'pen' | 'eraser' | null>(null);
+  activeTool = signal<'pen' | 'eraser' | 'character' | null>(null);
+  selectedCharacter = signal<string | null>(null);
+  readonly characters = CHARACTERS;
   mapCanvas = viewChild<ElementRef<HTMLCanvasElement>>('mapCanvas');
   isDrawing = false;
   private lastX = 0;
   private lastY = 0;
   private currentMode: 'pen' | 'eraser' = 'pen';
-  private strokes: Array<{ points: Array<{ x: number; y: number }>; mode: 'pen' | 'eraser' }> = [];
+  private canvasItems: CanvasItem[] = [];
   private currentStroke: Array<{ x: number; y: number }> = [];
   private resizeObserver?: ResizeObserver;
+  private imageCache = new Map<string, HTMLImageElement>();
 
   splitMaps = computed(() => this.maps().filter(m => m.inSplit));
   otherMaps = computed(() => this.maps().filter(m => !m.inSplit));
@@ -73,7 +100,7 @@ export class MapTracker implements OnDestroy {
       this.loading.set(false);
     });
 
-    this.resizeObserver = new ResizeObserver(() => this.redrawStrokes());
+    this.resizeObserver = new ResizeObserver(() => this.redrawAll());
   }
 
   ngOnDestroy(): void {
@@ -115,7 +142,8 @@ export class MapTracker implements OnDestroy {
     this.notesOpenIndex.set(index);
     this.modalTab.set('notes');
     this.activeTool.set(null);
-    this.strokes = [];
+    this.selectedCharacter.set(null);
+    this.canvasItems = [];
     this.currentStroke = [];
   }
 
@@ -129,7 +157,8 @@ export class MapTracker implements OnDestroy {
   closeNotes(): void {
     this.notesOpenIndex.set(null);
     this.activeTool.set(null);
-    this.strokes = [];
+    this.selectedCharacter.set(null);
+    this.canvasItems = [];
     this.currentStroke = [];
   }
 
@@ -137,8 +166,13 @@ export class MapTracker implements OnDestroy {
     this.activeTool.update(t => t === tool ? null : tool);
   }
 
+  selectCharacter(char: string): void {
+    this.selectedCharacter.set(char || null);
+    this.activeTool.set(char ? 'character' : null);
+  }
+
   clearCanvas(): void {
-    this.strokes = [];
+    this.canvasItems = [];
     this.currentStroke = [];
     const el = this.mapCanvas()?.nativeElement;
     if (!el) return;
@@ -146,6 +180,7 @@ export class MapTracker implements OnDestroy {
   }
 
   onCanvasMouseDown(e: MouseEvent): void {
+    if (this.activeTool() === 'character') return;
     const el = e.target as HTMLCanvasElement;
     this.syncCanvas(el);
     this.isDrawing = true;
@@ -188,10 +223,38 @@ export class MapTracker implements OnDestroy {
 
   onCanvasMouseUp(): void {
     if (this.currentStroke.length > 1) {
-      this.strokes.push({ points: [...this.currentStroke], mode: this.currentMode });
+      this.canvasItems.push({ type: 'stroke', points: [...this.currentStroke], mode: this.currentMode });
     }
     this.currentStroke = [];
     this.isDrawing = false;
+  }
+
+  onCanvasClick(e: MouseEvent): void {
+    if (this.activeTool() !== 'character' || !this.selectedCharacter()) return;
+    const el = e.target as HTMLCanvasElement;
+    if (el.width === 0 || el.height === 0) { el.width = el.offsetWidth; el.height = el.offsetHeight; }
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / el.width;
+    const y = (e.clientY - rect.top) / el.height;
+    const char = this.selectedCharacter()!;
+    this.canvasItems.push({ type: 'character', char, x, y });
+    const ctx = el.getContext('2d');
+    if (!ctx) return;
+    const img = this.getImage(char);
+    if (img.complete) {
+      ctx.drawImage(img, x * el.width - ICON_SIZE / 2, y * el.height - ICON_SIZE / 2, ICON_SIZE, ICON_SIZE);
+    } else {
+      img.onload = () => this.redrawAll();
+    }
+  }
+
+  private getImage(char: string): HTMLImageElement {
+    if (!this.imageCache.has(char)) {
+      const img = new Image();
+      img.src = `characters/${char}.png`;
+      this.imageCache.set(char, img);
+    }
+    return this.imageCache.get(char)!;
   }
 
   private syncCanvas(el: HTMLCanvasElement): void {
@@ -199,30 +262,36 @@ export class MapTracker implements OnDestroy {
     el.height = el.offsetHeight;
   }
 
-  private redrawStrokes(): void {
+  private redrawAll(): void {
     const el = this.mapCanvas()?.nativeElement;
     if (!el) return;
     this.syncCanvas(el);
     const ctx = el.getContext('2d');
     if (!ctx) return;
-    for (const stroke of this.strokes) {
-      if (stroke.points.length < 2) continue;
-      ctx.beginPath();
-      ctx.moveTo(stroke.points[0].x * el.width, stroke.points[0].y * el.height);
-      for (let i = 1; i < stroke.points.length; i++) {
-        ctx.lineTo(stroke.points[i].x * el.width, stroke.points[i].y * el.height);
-      }
-      if (stroke.mode === 'eraser') {
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.lineWidth = 20;
+    for (const item of this.canvasItems) {
+      if (item.type === 'stroke') {
+        if (item.points.length < 2) continue;
+        ctx.beginPath();
+        ctx.moveTo(item.points[0].x * el.width, item.points[0].y * el.height);
+        for (let i = 1; i < item.points.length; i++) {
+          ctx.lineTo(item.points[i].x * el.width, item.points[i].y * el.height);
+        }
+        if (item.mode === 'eraser') {
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.lineWidth = 20;
+        } else {
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.strokeStyle = '#111111';
+          ctx.lineWidth = 3;
+        }
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
       } else {
         ctx.globalCompositeOperation = 'source-over';
-        ctx.strokeStyle = '#111111';
-        ctx.lineWidth = 3;
+        const img = this.getImage(item.char);
+        ctx.drawImage(img, item.x * el.width - ICON_SIZE / 2, item.y * el.height - ICON_SIZE / 2, ICON_SIZE, ICON_SIZE);
       }
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.stroke();
     }
     ctx.globalCompositeOperation = 'source-over';
   }

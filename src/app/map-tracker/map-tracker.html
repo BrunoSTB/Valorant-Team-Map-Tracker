@@ -159,17 +159,27 @@
                 <path d="M20 20H7L3 16l13-13 7 7-3 4z"/><path d="M6.5 17.5l4-4"/>
               </svg>
             </button>
+            <select class="char-select" (change)="selectCharacter($any($event.target).value)">
+              <option value="">Agente...</option>
+              @for (char of characters; track char.id) {
+                <option [value]="char.id" [selected]="selectedCharacter() === char.id">{{ char.name }}</option>
+              }
+            </select>
             @if (activeTool() !== null) {
               <button class="tool-btn" (click)="clearCanvas()" title="Limpar">✕</button>
             }
           </div>
           <div class="map-drawing-area">
             <img [src]="maps()[notesOpenIndex()!].image + '_map.jpg'" [alt]="maps()[notesOpenIndex()!].name + ' map'" class="modal-map-img" />
-            <canvas #mapCanvas class="map-canvas" [class.active]="activeTool() !== null" [class.eraser]="activeTool() === 'eraser'"
+            <canvas #mapCanvas class="map-canvas"
+              [class.active]="activeTool() !== null"
+              [class.eraser]="activeTool() === 'eraser'"
+              [class.placing]="activeTool() === 'character'"
               (mousedown)="onCanvasMouseDown($event)"
               (mousemove)="onCanvasMouseMove($event)"
               (mouseup)="onCanvasMouseUp()"
-              (mouseleave)="onCanvasMouseUp()">
+              (mouseleave)="onCanvasMouseUp()"
+              (click)="onCanvasClick($event)">
             </canvas>
           </div>
         </div>
