@@ -21,7 +21,7 @@
   </header>
 
   <section class="map-section">
-    <div class="section-header">MAPAS DO SPLIT ATUAL</div>
+    <div class="section-header">MAPAS DA ROTAÇÃO ATUAL</div>
     <div class="map-list">
       @for (map of splitMaps(); track map.name) {
         <div class="map-row"
@@ -73,7 +73,7 @@
 
   <section class="map-section outros-section">
     <button class="section-toggle" (click)="showOthers.set(!showOthers())">
-      {{ showOthers() ? '▲' : '▼' }} OUTROS MAPAS (FORA DO SPLIT)
+      {{ showOthers() ? '▲' : '▼' }} OUTROS MAPAS (FORA DA ROTAÇÃO)
     </button>
     @if (showOthers()) {
       <div class="map-list">
