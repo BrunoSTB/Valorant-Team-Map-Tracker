@@ -1,5 +1,5 @@
 .tracker {
-  max-width: 860px;
+  max-width: min(95vw, 1600px);
   margin: 0 auto;
   padding: 2rem 1.5rem;
 }
@@ -343,12 +343,16 @@
   background: #1a2535;
   border: 1px solid #2a3a4d;
   border-radius: 6px;
-  width: 480px;
+  width: 800px;
   max-width: calc(100vw - 2rem);
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  resize: both;
+  overflow: auto;
+  min-width: 360px;
+  min-height: 300px;
 }
 
 .modal-header {
@@ -424,7 +428,9 @@
   font-family: 'Roboto', sans-serif;
   font-size: 0.85rem;
   padding: 0.65rem 0.75rem;
-  resize: vertical;
+  resize: none;
+  flex: 1;
+  min-height: 200px;
   line-height: 1.5;
   transition: border-color 0.2s;
 
