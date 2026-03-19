@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject, OnDestroy, ElementRef, viewChild } from '@angular/core';
+import { Component, signal, computed, inject, OnDestroy, ElementRef, viewChild, HostListener } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UpperCasePipe } from '@angular/common';
 import { getFirestore, doc, onSnapshot, setDoc, Unsubscribe } from 'firebase/firestore';
@@ -9,9 +9,8 @@ const LEGACY_STORAGE_KEY = 'valorant-map-stats';
 
 const ICON_SIZE = 34;
 
-type CanvasItem =
-  | { type: 'stroke'; points: Array<{ x: number; y: number }>; mode: 'pen' | 'eraser' }
-  | { type: 'character'; char: string; x: number; y: number };
+type StrokeItem = { points: Array<{ x: number; y: number }>; mode: 'pen' | 'eraser' };
+type CharacterToken = { char: string; x: number; y: number };
 
 const CHARACTERS: { id: string; name: string }[] = [
   { id: 'astra', name: 'Astra' }, { id: 'breach', name: 'Breach' },
@@ -67,13 +66,19 @@ export class MapTracker implements OnDestroy {
   modalTab = signal<'notes' | 'map'>('notes');
   activeTool = signal<'pen' | 'eraser' | 'character' | null>(null);
   selectedCharacter = signal<string | null>(null);
+  selectedTokenIndex = signal<number | null>(null);
+  canvasCursor = signal<string>('default');
   readonly characters = CHARACTERS;
   mapCanvas = viewChild<ElementRef<HTMLCanvasElement>>('mapCanvas');
   isDrawing = false;
+  private isDraggingToken = false;
+  private dragOffsetX = 0;
+  private dragOffsetY = 0;
   private lastX = 0;
   private lastY = 0;
   private currentMode: 'pen' | 'eraser' = 'pen';
-  private canvasItems: CanvasItem[] = [];
+  private strokes: StrokeItem[] = [];
+  private tokens: CharacterToken[] = [];
   private currentStroke: Array<{ x: number; y: number }> = [];
   private resizeObserver?: ResizeObserver;
   private imageCache = new Map<string, HTMLImageElement>();
@@ -137,13 +142,22 @@ export class MapTracker implements OnDestroy {
     this.updateMap(name, m => ({ ...m, notes }));
   }
 
+  @HostListener('document:keydown', ['$event'])
+  onKeyDown(e: KeyboardEvent): void {
+    if ((e.key === 'Delete' || e.key === 'Backspace') && this.selectedTokenIndex() !== null) {
+      this.deleteSelectedToken();
+    }
+  }
+
   openNotes(index: number): void {
     this.pendingNotes.set(this.maps()[index].notes);
     this.notesOpenIndex.set(index);
     this.modalTab.set('notes');
     this.activeTool.set(null);
     this.selectedCharacter.set(null);
-    this.canvasItems = [];
+    this.selectedTokenIndex.set(null);
+    this.strokes = [];
+    this.tokens = [];
     this.currentStroke = [];
   }
 
@@ -158,49 +172,97 @@ export class MapTracker implements OnDestroy {
     this.notesOpenIndex.set(null);
     this.activeTool.set(null);
     this.selectedCharacter.set(null);
-    this.canvasItems = [];
+    this.selectedTokenIndex.set(null);
+    this.strokes = [];
+    this.tokens = [];
     this.currentStroke = [];
   }
 
   setTool(tool: 'pen' | 'eraser'): void {
+    this.selectedTokenIndex.set(null);
     this.activeTool.update(t => t === tool ? null : tool);
   }
 
   selectCharacter(char: string): void {
     this.selectedCharacter.set(char || null);
     this.activeTool.set(char ? 'character' : null);
+    this.selectedTokenIndex.set(null);
   }
 
   clearCanvas(): void {
-    this.canvasItems = [];
+    this.strokes = [];
+    this.tokens = [];
     this.currentStroke = [];
+    this.selectedTokenIndex.set(null);
     const el = this.mapCanvas()?.nativeElement;
     if (!el) return;
     el.getContext('2d')?.clearRect(0, 0, el.width, el.height);
   }
 
+  deleteSelectedToken(): void {
+    const idx = this.selectedTokenIndex();
+    if (idx === null) return;
+    this.tokens.splice(idx, 1);
+    this.selectedTokenIndex.set(null);
+    this.redrawAll();
+  }
+
   onCanvasMouseDown(e: MouseEvent): void {
-    if (this.activeTool() === 'character') return;
+    const tool = this.activeTool();
     const el = e.target as HTMLCanvasElement;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (tool === 'character') return;
+
+    if (tool === null) {
+      const idx = this.tokenAt(x, y, el.width, el.height);
+      if (idx >= 0) {
+        this.selectedTokenIndex.set(idx);
+        this.isDraggingToken = true;
+        this.dragOffsetX = x - this.tokens[idx].x * el.width;
+        this.dragOffsetY = y - this.tokens[idx].y * el.height;
+        this.canvasCursor.set('grabbing');
+      } else {
+        this.selectedTokenIndex.set(null);
+      }
+      return;
+    }
+
     this.syncCanvas(el);
     this.isDrawing = true;
-    this.currentMode = this.activeTool() as 'pen' | 'eraser';
-    const rect = el.getBoundingClientRect();
-    this.lastX = e.clientX - rect.left;
-    this.lastY = e.clientY - rect.top;
-    this.currentStroke = [{ x: this.lastX / el.width, y: this.lastY / el.height }];
+    this.currentMode = tool as 'pen' | 'eraser';
+    this.lastX = x;
+    this.lastY = y;
+    this.currentStroke = [{ x: x / el.width, y: y / el.height }];
     this.resizeObserver?.disconnect();
     this.resizeObserver?.observe(el);
   }
 
   onCanvasMouseMove(e: MouseEvent): void {
-    if (!this.isDrawing) return;
     const el = e.target as HTMLCanvasElement;
-    const ctx = el.getContext('2d');
-    if (!ctx) return;
     const rect = el.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+
+    if (this.isDraggingToken) {
+      const idx = this.selectedTokenIndex();
+      if (idx === null) return;
+      this.tokens[idx] = { ...this.tokens[idx], x: (x - this.dragOffsetX) / el.width, y: (y - this.dragOffsetY) / el.height };
+      this.redrawAll();
+      return;
+    }
+
+    if (this.activeTool() === null) {
+      const hit = this.tokenAt(x, y, el.width, el.height);
+      this.canvasCursor.set(hit >= 0 ? 'grab' : 'default');
+      return;
+    }
+
+    if (!this.isDrawing) return;
+    const ctx = el.getContext('2d');
+    if (!ctx) return;
     ctx.beginPath();
     ctx.moveTo(this.lastX, this.lastY);
     ctx.lineTo(x, y);
@@ -222,8 +284,14 @@ export class MapTracker implements OnDestroy {
   }
 
   onCanvasMouseUp(): void {
+    if (this.isDraggingToken) {
+      this.isDraggingToken = false;
+      this.canvasCursor.set('grab');
+      return;
+    }
     if (this.currentStroke.length > 1) {
-      this.canvasItems.push({ type: 'stroke', points: [...this.currentStroke], mode: this.currentMode });
+      this.strokes.push({ points: [...this.currentStroke], mode: this.currentMode });
+      if (this.currentMode === 'eraser') this.redrawAll();
     }
     this.currentStroke = [];
     this.isDrawing = false;
@@ -237,7 +305,7 @@ export class MapTracker implements OnDestroy {
     const x = (e.clientX - rect.left) / el.width;
     const y = (e.clientY - rect.top) / el.height;
     const char = this.selectedCharacter()!;
-    this.canvasItems.push({ type: 'character', char, x, y });
+    this.tokens.push({ char, x, y });
     const ctx = el.getContext('2d');
     if (!ctx) return;
     const img = this.getImage(char);
@@ -246,6 +314,16 @@ export class MapTracker implements OnDestroy {
     } else {
       img.onload = () => this.redrawAll();
     }
+  }
+
+  private tokenAt(x: number, y: number, w: number, h: number): number {
+    const half = ICON_SIZE / 2;
+    for (let i = this.tokens.length - 1; i >= 0; i--) {
+      const tx = this.tokens[i].x * w;
+      const ty = this.tokens[i].y * h;
+      if (x >= tx - half && x <= tx + half && y >= ty - half && y <= ty + half) return i;
+    }
+    return -1;
   }
 
   private getImage(char: string): HTMLImageElement {
@@ -265,35 +343,51 @@ export class MapTracker implements OnDestroy {
   private redrawAll(): void {
     const el = this.mapCanvas()?.nativeElement;
     if (!el) return;
-    this.syncCanvas(el);
+    if (el.width !== el.offsetWidth || el.height !== el.offsetHeight) {
+      el.width = el.offsetWidth;
+      el.height = el.offsetHeight;
+    } else {
+      el.getContext('2d')?.clearRect(0, 0, el.width, el.height);
+    }
     const ctx = el.getContext('2d');
     if (!ctx) return;
-    for (const item of this.canvasItems) {
-      if (item.type === 'stroke') {
-        if (item.points.length < 2) continue;
-        ctx.beginPath();
-        ctx.moveTo(item.points[0].x * el.width, item.points[0].y * el.height);
-        for (let i = 1; i < item.points.length; i++) {
-          ctx.lineTo(item.points[i].x * el.width, item.points[i].y * el.height);
-        }
-        if (item.mode === 'eraser') {
-          ctx.globalCompositeOperation = 'destination-out';
-          ctx.lineWidth = 20;
-        } else {
-          ctx.globalCompositeOperation = 'source-over';
-          ctx.strokeStyle = '#00F0A1';
-          ctx.lineWidth = 3;
-        }
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.stroke();
+
+    // 1. Replay strokes (eraser only affects strokes)
+    for (const stroke of this.strokes) {
+      if (stroke.points.length < 2) continue;
+      ctx.beginPath();
+      ctx.moveTo(stroke.points[0].x * el.width, stroke.points[0].y * el.height);
+      for (let i = 1; i < stroke.points.length; i++) {
+        ctx.lineTo(stroke.points[i].x * el.width, stroke.points[i].y * el.height);
+      }
+      if (stroke.mode === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.lineWidth = 20;
       } else {
         ctx.globalCompositeOperation = 'source-over';
-        const img = this.getImage(item.char);
-        ctx.drawImage(img, item.x * el.width - ICON_SIZE / 2, item.y * el.height - ICON_SIZE / 2, ICON_SIZE, ICON_SIZE);
+        ctx.strokeStyle = '#00F0A1';
+        ctx.lineWidth = 3;
       }
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
     }
     ctx.globalCompositeOperation = 'source-over';
+
+    // 2. Draw tokens always on top
+    for (let i = 0; i < this.tokens.length; i++) {
+      const t = this.tokens[i];
+      const px = t.x * el.width;
+      const py = t.y * el.height;
+      const img = this.getImage(t.char);
+      ctx.drawImage(img, px - ICON_SIZE / 2, py - ICON_SIZE / 2, ICON_SIZE, ICON_SIZE);
+      if (i === this.selectedTokenIndex()) {
+        ctx.strokeStyle = '#ff4655';
+        ctx.lineWidth = 2;
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeRect(px - ICON_SIZE / 2 - 2, py - ICON_SIZE / 2 - 2, ICON_SIZE + 4, ICON_SIZE + 4);
+      }
+    }
   }
 
   globalIndex(map: MapStats): number {

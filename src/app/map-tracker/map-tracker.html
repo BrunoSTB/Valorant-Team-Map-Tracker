@@ -165,16 +165,24 @@
                 <option [value]="char.id" [selected]="selectedCharacter() === char.id">{{ char.name }}</option>
               }
             </select>
-            @if (activeTool() !== null) {
-              <button class="tool-btn" (click)="clearCanvas()" title="Limpar">✕</button>
+            @if (selectedTokenIndex() !== null) {
+              <button class="tool-btn danger" (click)="deleteSelectedToken()" title="Apagar token">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                </svg>
+              </button>
+            }
+            @if (activeTool() !== null || selectedTokenIndex() !== null) {
+              <button class="tool-btn" (click)="clearCanvas()" title="Limpar tudo">✕</button>
             }
           </div>
           <div class="map-drawing-area">
             <img [src]="maps()[notesOpenIndex()!].image + '_map.png'" [alt]="maps()[notesOpenIndex()!].name + ' map'" class="modal-map-img" />
             <canvas #mapCanvas class="map-canvas"
-              [class.active]="activeTool() !== null"
               [class.eraser]="activeTool() === 'eraser'"
               [class.placing]="activeTool() === 'character'"
+              [class.drawing]="activeTool() === 'pen'"
+              [style.cursor]="activeTool() === null ? canvasCursor() : null"
               (mousedown)="onCanvasMouseDown($event)"
               (mousemove)="onCanvasMouseMove($event)"
               (mouseup)="onCanvasMouseUp()"
