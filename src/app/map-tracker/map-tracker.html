@@ -170,7 +170,7 @@
             }
           </div>
           <div class="map-drawing-area">
-            <img [src]="maps()[notesOpenIndex()!].image + '_map.jpg'" [alt]="maps()[notesOpenIndex()!].name + ' map'" class="modal-map-img" />
+            <img [src]="maps()[notesOpenIndex()!].image + '_map.png'" [alt]="maps()[notesOpenIndex()!].name + ' map'" class="modal-map-img" />
             <canvas #mapCanvas class="map-canvas"
               [class.active]="activeTool() !== null"
               [class.eraser]="activeTool() === 'eraser'"
